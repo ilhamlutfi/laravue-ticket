@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TicketReplyRequest;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\TicketRequest;
+use App\Http\Resources\TicketReplyResource;
 use App\Http\Resources\TicketResource;
 
 class TicketController extends Controller
@@ -14,7 +16,7 @@ class TicketController extends Controller
     {
         $query = Ticket::query()
             ->with('replies')
-            ->select('id', 'title', 'description', 'code', 'status', 'priority', 'user_id', 'created_at', 'updated_at')
+            ->select('id', 'title', 'description', 'code', 'status', 'priority', 'user_id', 'created_at', 'updated_at', 'completed_at')
             ->when(auth()->user()->role != 'admin', function ($q) {
                 $q->where('user_id', auth()->user()->id);
             })
@@ -43,7 +45,7 @@ class TicketController extends Controller
 
             return response()->json([
                 'message' => 'Tickets retrieved successfully',
-                'data' => TicketResource::collection($tickets)
+                'data' => TicketResource::collection($tickets->load('replies.user'))
             ], 200);
         } catch (\Exception $err) {
             return response()->json([
@@ -107,6 +109,59 @@ class TicketController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to create ticket',
+                'error' => $err->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeReply(TicketReplyRequest $request, string $code)
+    {
+        $data = $request->validated();
+
+        DB::beginTransaction();
+
+        try {
+            $ticket = Ticket::where('code', $code)->first();
+
+            if (!$ticket) {
+                return response()->json([
+                    'message' => 'Ticket not found'
+                ], 404);
+            }
+
+            // Ensure the user has access to the ticket
+            if (auth()->user()->role != 'admin' && $ticket->user_id != auth()->user()->id) {
+                return response()->json([
+                    'message' => 'Unauthorized access to this ticket'
+                ], 403);
+            }
+
+            $reply = $ticket->replies()->create([
+                'user_id' => auth()->user()->id,
+                'content' => $data['content'],
+            ]);
+
+            // Update ticket status if admin
+            if (auth()->user()->role === 'admin' && isset($data['status'])) {
+                $ticket->update(['status' => $data['status']]);
+                // If the status is resolved, set completed_at to now, otherwise null
+                if ($data['status'] == 'resolved') {
+                    $ticket->update(['completed_at' => now()]);
+                } else {
+                    $ticket->update(['completed_at' => null]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Reply added successfully',
+                'reply' => new TicketReplyResource($reply),
+            ], 201);
+        } catch (\Exception $err) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to add reply',
                 'error' => $err->getMessage()
             ], 500);
         }
