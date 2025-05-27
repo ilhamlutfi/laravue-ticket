@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\LoginRequest;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -24,7 +25,7 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Login successfully',
                 'data' => [
-                    'user' => $user,
+                    'user' => new UserResource($user),
                     'token' => $token,
                 ]
             ], 200);
@@ -49,6 +50,24 @@ class AuthController extends Controller
         } catch (\Exception $err) {
             return response()->json([
                 'message' => 'Logout failed',
+                'error' => $err->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getUser()
+    {
+        try {
+            $user = Auth::user();
+
+            return response()->json([
+                'message' => 'User retrieved successtully',
+                'data' => new UserResource($user),
+            ], 200);
+
+        } catch (\Exception $err) {
+            return response()->json([
+                'message' => 'Failed to retrieve user',
                 'error' => $err->getMessage(),
             ], 500);
         }

@@ -10,14 +10,14 @@ use Illuminate\Container\Attributes\Auth;
 // })->middleware('auth:sanctum');
 
 Route::post('/login', [AuthController::class, 'login'])
-    ->name('login')
     ->middleware([
         'guest', // Ensure the user is not authenticated
         'throttle:6,1' // Throttle to prevent abuse
     ]);
 
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->name('logout')
-    ->middleware([
-        'auth:sanctum', // Ensure the user is authenticated
-    ]);
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'getUser']);
+});
+
