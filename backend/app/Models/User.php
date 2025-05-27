@@ -52,4 +52,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class);
     }
+
+    // one user can have many replies
+    public function replies()
+    {
+        return $this->hasMany(TicketReply::class);
+    }
 }
