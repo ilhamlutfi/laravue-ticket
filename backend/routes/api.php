@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TicketController;
 use Illuminate\Container\Attributes\Auth;
 
 // Route::get('/user', function (Request $request) {
@@ -14,11 +15,16 @@ Route::post('/login', [AuthController::class, 'login'])
         'guest', // Ensure the user is not authenticated
         'throttle:6,1' // Throttle to prevent abuse
     ]);
+Route::post('/register', [AuthController::class, 'register'])
+    ->middleware([
+        'guest',
+        'throttle:6,1'
+    ]);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/register', [AuthController::class, 'register']);
     Route::get('/user', [AuthController::class, 'getUser']);
+
+    Route::apiResource('/tickets', TicketController::class);
 });
 
