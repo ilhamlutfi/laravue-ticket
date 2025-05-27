@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Container\Attributes\Auth;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\DashboardController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -27,5 +28,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('/tickets', TicketController::class);
     Route::post('/tickets-reply/{code}', [TicketController::class, 'storeReply']);
+
+    Route::get('/dashboard', [DashboardController::class, 'getStatistics']);
 });
 
