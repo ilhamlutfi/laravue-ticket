@@ -13,6 +13,7 @@ class TicketController extends Controller
     private function applyFilters(Request $request)
     {
         $query = Ticket::query()
+            ->with('replies')
             ->select('id', 'title', 'description', 'code', 'status', 'priority', 'user_id', 'created_at', 'updated_at')
             ->when(auth()->user()->role != 'admin', function ($q) {
                 $q->where('user_id', auth()->user()->id);
@@ -47,6 +48,36 @@ class TicketController extends Controller
         } catch (\Exception $err) {
             return response()->json([
                 'message' => 'Failed to retrieve tickets',
+                'error' => $err->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show(string $code)
+    {
+        try {
+            $ticket = Ticket::with('replies')->where('code', $code)->first();
+
+            if (!$ticket) {
+                return response()->json([
+                    'message' => 'Ticket not found'
+                ], 404);
+            }
+
+            // Ensure the user has access to the ticket
+            if (auth()->user()->role != 'admin' && $ticket->user_id != auth()->user()->id) {
+                return response()->json([
+                    'message' => 'Unauthorized access to this ticket'
+                ], 403);
+            }
+
+            return response()->json([
+                'message' => 'Ticket retrieved successfully',
+                'data' => new TicketResource($ticket)
+            ], 200);
+        } catch (\Exception $err) {
+            return response()->json([
+                'message' => 'Failed to retrieve single ticket',
                 'error' => $err->getMessage()
             ], 500);
         }

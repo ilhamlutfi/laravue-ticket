@@ -25,6 +25,7 @@ class TicketResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'completed_at' => $this->completed_at ? $this->completed_at : null,
+            'ticket_replies' => TicketReplyResource::collection($this->whenLoaded('replies')),
         ];
     }
 }
