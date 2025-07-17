@@ -11,6 +11,13 @@ use App\Http\Controllers\DashboardController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+
+Route::get('/', function() {
+    return response()->json([
+        'message' => 'API is running'
+    ], 200);
+});
+
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware([
         'guest', // Ensure the user is not authenticated
