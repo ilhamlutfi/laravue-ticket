@@ -4,6 +4,8 @@
     export function DatatableSimple() {
         const datatablesSimple = document.getElementById('datatablesSimple');
         if (datatablesSimple) {
-            new simpleDatatables.DataTable(datatablesSimple);
+            return new simpleDatatables.DataTable(datatablesSimple);
         }
+
+        return null
     }

@@ -166,4 +166,35 @@ class TicketController extends Controller
             ], 500);
         }
     }
+
+    public function destroy(string $code)
+    {
+        try {
+            $ticket = Ticket::where('code', $code)->first();
+
+            if (!$ticket) {
+                return response()->json([
+                    'message' => 'Ticket not found'
+                ], 404);
+            }
+
+            // Ensure the user has access to the ticket
+            if (auth()->user()->role != 'admin' && $ticket->user_id != auth()->user()->id) {
+                return response()->json([
+                    'message' => 'Unauthorized access to this ticket'
+                ], 403);
+            }
+
+            $ticket->delete();
+
+            return response()->json([
+                'message' => 'Ticket deleted successfully'
+            ], 200);
+        } catch (\Exception $err) {
+            return response()->json([
+                'message' => 'Failed to delete ticket',
+                'error' => $err->getMessage()
+            ], 500);
+        }
+    }   
 }
