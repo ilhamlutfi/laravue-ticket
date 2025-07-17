@@ -1,11 +1,12 @@
 <script setup>
 
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, reactive, ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import Cookies from 'js-cookie';
 import api from '../../helpers/axios.js';
 
 const router = useRouter()
+const route = useRoute()
 
 const user = reactive({
     email: '',
@@ -35,6 +36,10 @@ const loginAttempt = async () => {
 
         successMessage.value = response.data.message
 
+        // Reset form input
+        user.email = ''
+        user.password = ''
+
         // verify token
         if (Cookies.get('token')) {
             // delay 1 detik
@@ -54,6 +59,15 @@ const loginAttempt = async () => {
         isLoading.value = false
     }
 }
+
+// mounted logout success message
+onMounted(() => {
+    if (route.query.message) {
+        successMessage.value = route.query.message
+
+        router.replace({ query: {} })
+    }
+})
 </script>
 
 <template>

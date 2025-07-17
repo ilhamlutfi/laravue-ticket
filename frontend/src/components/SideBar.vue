@@ -1,4 +1,23 @@
 <script setup>
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import Cookies from 'js-cookie';
+
+const router = useRouter();
+
+const successMessage = ref('');
+
+const logoutAttempt = () => {
+    const confirmed = confirm('Are you sure you want to logout?');
+    if (!confirmed) return;
+
+    Cookies.remove('token')
+    Cookies.remove('user')
+
+    successMessage.value = 'Logout attempt successfully'
+
+    router.push({ name: 'login', query: { message: successMessage.value } })
+}
 
 </script>
 
@@ -17,6 +36,11 @@
                     <div class="sb-nav-link-icon"><i class="fas fa-ticket"></i></div>
                     Ticket
                 </router-link>
+
+                <a href="#" class="nav-link" @click="logoutAttempt">
+                    <div class="sb-nav-link-icon"><i class="fas fa-sign-out-alt"></i></div>
+                    Logout
+                </a>
             </div>
         </div>
         <div class="sb-sidenav-footer">
